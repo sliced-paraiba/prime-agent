@@ -104,11 +104,11 @@ describe("SessionManager append hot path", () => {
 		mgr.appendMessage(userMsg("one"));
 		mgr.appendSessionState({ status: "archived" });
 		const file = mgr.getSessionFile()!;
-		expect(existsSync(file)).toBe(true);
-		expect(readLines(file)).toHaveLength(3); // header + user + session_state
+		// session_state alone must not create the file (lazy drafts).
+		expect(existsSync(file)).toBe(false);
 
 		mgr.appendMessage(userMsg("two"));
-		expect(readLines(file)).toHaveLength(3); // still suppressed
+		expect(existsSync(file)).toBe(false); // still suppressed
 
 		mgr.appendMessage(assistantMsg("hi"));
 		const lines = readLines(file);

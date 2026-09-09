@@ -346,7 +346,8 @@ describe("daemon supervisor resident workers", () => {
 		workerPids.add(summary.workerPid);
 
 		expect(summary).toMatchObject({ runtimeKind: "top-level", rlmDepth: 0 });
-		expect(await readSessionInfo(summary.sessionFile)).toMatchObject({ rlmDepth: 0, parentSessionPath: undefined });
+		// Lazy drafts: an empty session has no file yet, so depth metadata is
+		// verified through the runtime summary rather than readSessionInfo.
 
 		await client.request({ type: "shutdown" });
 		client.close();
@@ -959,6 +960,8 @@ describe("daemon supervisor resident workers", () => {
 		const sessionManager = SessionManager.create(projectDir, sessionDir);
 		sessionManager.appendMessage({ role: "user", content: "stop with daemon", timestamp: 1 });
 		sessionManager.appendSessionState({ status: "active" });
+		// Stand in for a session with real conversation content (lazy drafts).
+		sessionManager.flushNow();
 		const sessionFile = sessionManager.getSessionFile();
 		if (!sessionFile) {
 			throw new Error("Fixture session did not persist");

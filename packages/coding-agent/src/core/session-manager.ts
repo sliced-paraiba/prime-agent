@@ -2024,7 +2024,14 @@ export class SessionManager {
 	_persist(entry: SessionEntry): void {
 		if (!this.persist || !this.sessionFile) return;
 
-		const shouldPersistWithoutAssistant = entry.type === "session_state" || entry.type === "session_info";
+		// Never let daemon bookkeeping (session_state "active"/"archived") CREATE
+		// the session file — otherwise every fresh TUI launch writes an empty draft
+		// even when the user never sends a message. session_info (explicit user
+		// naming) may still create it, and session_state keeps an already-existing
+		// file current.
+		const shouldPersistWithoutAssistant =
+			entry.type === "session_info" ||
+			(entry.type === "session_state" && this.flushed && existsSync(this.sessionFile));
 		if (!this.hasAssistantEntry && !shouldPersistWithoutAssistant) {
 			this.flushed = false;
 			return;
