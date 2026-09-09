@@ -44,9 +44,9 @@ describe("buildRlmPrompt", () => {
 		});
 
 		expect(prompt).toContain("Installed Python skill modules (pre-imported): `websearch`.");
-		expect(prompt).toContain("A callable `rlm` is already in your global namespace");
+		expect(prompt).toContain("A callable `rlm` is already in my global namespace");
 		expect(prompt).toContain("persistent Python REPL");
-		expect(prompt).toContain("Python is the orchestration language");
+		expect(prompt).toContain("Python is my orchestration language");
 	});
 
 	test("discovers requested models through a bounded authenticated host search", () => {
@@ -57,9 +57,8 @@ describe("buildRlmPrompt", () => {
 		});
 
 		expect(prompt).toContain("await rlm.find_models(...)");
-		expect(prompt).toContain("exact returned selector");
-		expect(prompt).toContain("An unavailable requested model fails spawn");
-		expect(prompt).toContain("decide whether to retry or omit `model`");
+		expect(prompt).toContain("using an exact selector from");
+		expect(prompt).toContain("an unavailable choice fails the spawn");
 		expect(prompt).not.toContain("model choices for subagents");
 	});
 
@@ -122,7 +121,7 @@ describe("buildRlmPrompt", () => {
 		expect(withCapabilities).toContain("agent_message.send");
 		expect(withCapabilities).toContain("agent_message.list_agents");
 		expect(withCapabilities).toContain("agent_observe");
-		expect(withCapabilities).toContain("restricted to your parent, siblings, and direct children");
+		expect(withCapabilities).toContain("restricted to my parent, siblings, and direct children");
 	});
 
 	test("does not prescribe kernel-only child replies without ipython", () => {
@@ -134,8 +133,10 @@ describe("buildRlmPrompt", () => {
 			depth: 1,
 		});
 
-		expect(prompt).toContain("You are a child agent");
-		expect(prompt).not.toContain("When a task calls for an answer, reply explicitly with `await agent_message.send");
+		expect(prompt).toContain("I am a child agent");
+		expect(prompt).not.toContain(
+			"When a task calls for an answer, I reply explicitly with `await agent_message.send",
+		);
 	});
 
 	test("exposes the automatic child registry independently of observation skills", () => {
@@ -167,7 +168,7 @@ describe("buildRlmPrompt", () => {
 			allowRecursion: false,
 		});
 
-		expect(prompt).toContain("Use `bash()` to invoke programs, not to write shell programs");
+		expect(prompt).toContain("I invoke programs with `bash()` rather than writing shell programs");
 		expect(prompt).toContain("A `bash()` handle left running beyond its creating cell sends a completion follow-up");
 	});
 
@@ -179,8 +180,8 @@ describe("buildRlmPrompt", () => {
 			allowRecursion: false,
 		});
 
-		expect(prompt).toContain("Use Python for reading, searching, and editing files");
-		expect(prompt).toContain("Always assign read/search results to named variables");
+		expect(prompt).toContain("I read, search, and edit files in Python");
+		expect(prompt).toContain("always assign results to named variables");
 	});
 
 	test("includes the edit skill guidance only when the edit skill is installed", () => {
@@ -427,12 +428,12 @@ describe("buildSystemPrompt", () => {
 			messagesPath: "/repo/.pi/sessions/session.jsonl",
 		});
 
-		expect(prompt).toContain("You are a general purpose agent that uses code to solve tasks.");
+		expect(prompt).toContain("I am a dynamical system that performs heuristic search");
 		expect(prompt).toContain("Working directory: /repo");
 		expect(prompt).toContain("Conversation log: /repo/.pi/sessions/session.jsonl");
 		expect(prompt).toContain("await rlm('sub-task')");
 		expect(prompt).toContain("returns at admission, not completion");
-		expect(prompt).toContain("Results arrive only through an available messaging capability or files");
+		expect(prompt).toContain("it never waits for or returns the child's answer");
 		expect(prompt).toContain("recover direct child handles");
 		expect(prompt).toContain("kernel restart or compaction");
 		expect(prompt).toContain("rlm.list_subagents");
@@ -441,7 +442,7 @@ describe("buildSystemPrompt", () => {
 		expect(prompt).toContain("name='api-reviewer'");
 		expect(prompt).toContain("session_dir");
 		expect(prompt).toContain("agent_observe");
-		expect(prompt).toContain("restricted to your parent, siblings, and direct children");
+		expect(prompt).toContain("restricted to my parent, siblings, and direct children");
 	});
 
 	test("omits ipython-only subagent guidance when ipython is inactive", () => {
@@ -482,7 +483,7 @@ describe("buildSystemPrompt", () => {
 			includeShellExamples: true,
 		});
 
-		expect(prompt).toContain("You are a general purpose agent that uses code to solve tasks.");
+		expect(prompt).toContain("I am a dynamical system that performs heuristic search");
 		expect(prompt).not.toContain("persistent Python REPL");
 		expect(prompt).not.toContain("Default to non-blocking subagents");
 		expect(prompt).not.toContain("agent_observe.list_agents");
@@ -546,7 +547,7 @@ describe("buildSystemPrompt", () => {
 
 		expect(prompt).toContain("custom body");
 		expect(prompt).not.toContain("# IPython Kernel Guidance");
-		expect(prompt).not.toContain("You are a general purpose agent that uses code to solve tasks.");
+		expect(prompt).not.toContain("I am a dynamical system that performs heuristic search");
 		expect(prompt.indexOf("Current working directory: /repo")).toBeLessThan(prompt.indexOf("custom append"));
 	});
 
@@ -561,9 +562,9 @@ describe("buildSystemPrompt", () => {
 			rlmParentAgent: "orchestrator",
 		});
 
-		expect(prompt).toContain("You are a child agent spawned by orchestrator");
+		expect(prompt).toContain("I am a child agent spawned by orchestrator");
 		expect(prompt).toContain('await agent_message.send(message, receiver_role="parent")');
-		expect(prompt).not.toContain("You are a general purpose agent that uses code to solve tasks.");
+		expect(prompt).not.toContain("I am a dynamical system that performs heuristic search");
 	});
 
 	test("gates custom-prompt child reply doctrine on IPython and agent messaging", () => {
@@ -577,7 +578,7 @@ describe("buildSystemPrompt", () => {
 				rlmDepth: 1,
 			});
 
-		expect(build(["ipython"], [])).toContain("You are a child agent spawned by your parent agent");
+		expect(build(["ipython"], [])).toContain("I am a child agent spawned by my parent agent");
 		expect(build(["ipython"], [])).not.toContain("agent_message.send");
 		expect(build(["bash"], [pythonSkill("agent-message")])).not.toContain("agent_message.send");
 	});
