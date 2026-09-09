@@ -1,0 +1,86 @@
+name: Upstream Sync
+
+# Keeps this fork rebased on PrimeIntellect-ai/prime-agent and builds a fork
+# release whenever upstream publishes one. Runs every 6 hours; GitHub disables
+# scheduled workflows after 60 days of repository inactivity.
+
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    outputs:
+      new_release: ${{ steps.release.outputs.new_release }}
+      release_tag: ${{ steps.release.outputs.release_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/PrimeIntellect-ai/prime-agent.git
+          # Deliberately no --tags: upstream tag names collide with the fork's
+          # own release tags, and the fork tags point at patched commits.
+          git fetch upstream main
+
+      - name: Rebase main onto upstream/main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git rebase upstream/main; then
+            if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+              git push --force-with-lease origin main
+              echo "Pushed rebased main."
+            else
+              echo "Already up to date."
+            fi
+          else
+            git rebase --abort || true
+            echo "::error::Rebase onto upstream/main conflicted; manual resolution needed."
+            if ! gh issue list --state open --limit 50 --json title --jq '.[].title' | grep -qx "Upstream sync conflict"; then
+              gh issue create                 --title "Upstream sync conflict"                 --body "The scheduled rebase of \`main\` onto \`upstream/main\` conflicted. Resolve manually: \`git fetch upstream main && git rebase upstream/main\`, then \`git push --force-with-lease origin main\`. This issue auto-stops reappearing once the rebase succeeds; close it after resolving."
+            fi
+            exit 1
+          fi
+
+      - name: Detect new upstream release
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          latest=$(gh release list --repo PrimeIntellect-ai/prime-agent --exclude-drafts --exclude-pre-releases --limit 1 --json tagName --jq '.[0].tagName')
+          if [ -z "$latest" ]; then
+            echo "No upstream releases found."
+            exit 0
+          fi
+          echo "Latest upstream release: $latest"
+          if git rev-parse -q --verify "refs/tags/$latest" >/dev/null; then
+            echo "Fork already has tag $latest; nothing to do."
+            exit 0
+          fi
+          # Tag the current (rebased) main so the release build includes the
+          # fork's patches on top of the upstream release commit.
+          git tag "$latest" HEAD
+          git push origin "$latest"
+          echo "new_release=true" >> "$GITHUB_OUTPUT"
+          echo "release_tag=$latest" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: sync
+    if: needs.sync.outputs.new_release == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/fork-release.yml
+    with:
+      tag: ${{ needs.sync.outputs.release_tag }}
