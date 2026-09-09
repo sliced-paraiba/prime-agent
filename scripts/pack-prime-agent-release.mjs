@@ -153,7 +153,9 @@ function npmTarballName(packageName, version) {
 }
 
 function releaseTarballUrl(baseUrl, version, tarballFile) {
-	return `${baseUrl}/releases/v${version}/${tarballFile}`;
+	// Fork: artifacts are hosted as GitHub release assets, whose download URLs
+	// follow <repo>/releases/download/<tag>/<file> instead of the upstream R2 layout.
+	return `${baseUrl}/download/v${version}/${tarballFile}`;
 }
 
 function rewriteInternalDependencies(dependencies, internalPackageUrls) {
@@ -328,7 +330,7 @@ function main() {
 	writeJson(join(artifactsDir, manifestName), {
 		version: `v${releaseVersion}`,
 		package: publicPackageName,
-		tarball: `releases/v${releaseVersion}/${artifactFiles.get("coding-agent")}`,
+		tarball: releaseTarballUrl(args.baseUrl, releaseVersion, artifactFiles.get("coding-agent")),
 		tarballs: tarballs.map((tarball) => ({
 			package: tarball.name,
 			file: tarball.file,
