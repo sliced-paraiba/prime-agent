@@ -16,6 +16,8 @@ function createSavedSession(cwd: string, sessionDir: string, sessionId: string):
 	const session = SessionManager.create(cwd, sessionDir);
 	session.newSession({ id: sessionId });
 	session.appendSessionState({ status: "archived" });
+	// session_state no longer creates the file on its own (lazy drafts).
+	session.flushNow();
 }
 
 describe("ENG-4722 resume selector matching", () => {
