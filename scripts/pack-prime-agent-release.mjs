@@ -165,7 +165,8 @@ function npmTarballName(packageName, version) {
 }
 
 function releaseTarballUrl(baseUrl, version, tarballFile) {
-	return `${baseUrl}/releases/v${version}/${tarballFile}`;
+	// Artifacts are GitHub release assets: <repo>/releases/download/<tag>/<file>.
+	return `${baseUrl}/download/v${version}/${tarballFile}`;
 }
 
 function rewriteInternalDependencies(dependencies, internalPackageUrls) {
@@ -251,6 +252,7 @@ export function writeReleaseMetadata({
 	codingAgentTarball,
 	tarballs,
 	binaries,
+	baseUrl,
 }) {
 	writeFileSync(
 		join(artifactsDir, "SHA256SUMS"),
@@ -264,7 +266,7 @@ export function writeReleaseMetadata({
 	writeJson(join(artifactsDir, manifestName), {
 		version: `v${releaseVersion}`,
 		package: publicPackageName,
-		tarball: `releases/v${releaseVersion}/${codingAgentTarball}`,
+		tarball: baseUrl ? releaseTarballUrl(baseUrl, releaseVersion, codingAgentTarball) : `releases/v${releaseVersion}/${codingAgentTarball}`,
 		...(binariesV1.length > 0 ? { binaries: binariesV1 } : {}),
 		...(binaries.length > 0 ? { binariesV2: binaries } : {}),
 		tarballs: tarballs.map((tarball) => ({
@@ -379,6 +381,7 @@ function main() {
 		codingAgentTarball: artifactFiles.get("coding-agent"),
 		tarballs,
 		binaries,
+		baseUrl: args.baseUrl,
 	});
 
 	for (const artifact of [...tarballs, ...binaries]) {
