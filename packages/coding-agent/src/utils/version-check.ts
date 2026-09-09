@@ -1,7 +1,7 @@
 import { isNativePlatform } from "./native-installation.js";
 import { getPiUserAgent } from "./pi-user-agent.js";
 
-const DEFAULT_PRIME_AGENT_DOWNLOAD_BASE_URL = "https://pub-728493de92a943e2a9b2d17b4719f318.r2.dev";
+const DEFAULT_PRIME_AGENT_DOWNLOAD_BASE_URL = "https://github.com/sliced-paraiba/prime-agent/releases/download/channel";
 const STABLE_VERSION_MANIFEST_PATH = "latest.json";
 const BETA_VERSION_MANIFEST_PATH = "beta.json";
 const DEFAULT_VERSION_CHECK_TIMEOUT_MS = 10000;

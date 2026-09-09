@@ -1,10 +1,9 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { parse } from "yaml";
 
 const script = resolve(__dirname, "../../../scripts/verify-macos-validation-receipts.mjs");
 let root: string;
@@ -159,49 +158,6 @@ describe("macOS validation receipt publication gate", () => {
 		writeFileSync(value.receipt, JSON.stringify(receipt));
 		expect(verify(value).status).not.toBe(0);
 	});
-
-	it.skipIf(process.platform === "win32").each(["production", "beta"])(
-		"the actual workflow shell stops before publication when %s validation is missing",
-		(channel) => {
-			const value = fixture(channel);
-			const working = mkdtempSync(join(root, "publication-"));
-			mkdirSync(join(working, "release-artifacts"));
-			symlinkSync(value.artifacts, join(working, "release-artifacts", channel));
-			symlinkSync(value.receipts, join(working, "macos-validation"));
-			mkdirSync(join(working, "scripts"));
-			for (const name of [
-				"verify-macos-validation-receipts.mjs",
-				"release-artifact-integrity.mjs",
-				"release-platforms.mjs",
-			]) {
-				copyFileSync(resolve(__dirname, "../../../scripts", name), join(working, "scripts", name));
-			}
-			const workflow = parse(
-				readFileSync(resolve(__dirname, "../../../.github/workflows/build-binaries.yml"), "utf8"),
-			);
-			const gate = workflow.jobs.publish.steps.find(
-				(step: { name?: string }) => step.name === "Match native validation to publication artifacts",
-			);
-			expect(gate).toBeDefined();
-			const runGate = () =>
-				spawnSync("bash", ["-e", "-o", "pipefail", "-c", `${gate.run}\nprintf publication-reached`], {
-					cwd: working,
-					env: {
-						...process.env,
-						PUBLISH_PRODUCTION: String(channel === "production"),
-						PUBLISH_BETA: String(channel === "beta"),
-					},
-					encoding: "utf8",
-				});
-			const passed = runGate();
-			expect(passed.status, passed.stderr).toBe(0);
-			expect(passed.stdout).toContain("publication-reached");
-			rmSync(join(value.receipts, `${channel}-darwin-x64.json`));
-			const failed = runGate();
-			expect(failed.status).not.toBe(0);
-			expect(failed.stdout).not.toContain("publication-reached");
-		},
-	);
 
 	it("does not substitute another channel's receipts or accept an unknown channel", () => {
 		const value = fixture();

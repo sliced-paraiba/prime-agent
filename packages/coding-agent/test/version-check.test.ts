@@ -12,8 +12,7 @@ import {
 } from "../src/utils/version-check.js";
 import { clearAmbientRuntimeEnv } from "./ambient-env.js";
 
-const defaultPrimeAgentDownloadBaseUrl = "https://pub-728493de92a943e2a9b2d17b4719f318.r2.dev";
-
+const defaultPrimeAgentDownloadBaseUrl = "https://github.com/sliced-paraiba/prime-agent/releases/download/channel";
 // These checks read the environment, so each test starts from a cleared one and the
 // host shell cannot decide the outcome. Tests that need a variable set it themselves.
 let restoreAmbientRuntimeEnv: () => void;
