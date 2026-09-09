@@ -78,11 +78,12 @@ describe("SessionManager session state", () => {
 			const cwd = join(tempDir, "project");
 			const sessionDir = join(tempDir, "sessions");
 			const session = SessionManager.create(cwd, sessionDir);
-			session.appendSessionState({ status: "active" });
+			// Fork: the rename itself (session_info) creates the draft's file;
+			// session_state bookkeeping no longer does.
+			session.appendSessionInfo("Renamed draft");
 			const sessionFile = session.getSessionFile();
 			expect(sessionFile).toBeDefined();
-
-			SessionManager.open(sessionFile!, sessionDir).appendSessionInfo("Renamed draft");
+			expect(existsSync(sessionFile!)).toBe(true);
 
 			await expect(SessionManager.list(cwd, sessionDir)).resolves.toEqual([
 				expect.objectContaining({ id: session.getSessionId(), name: "Renamed draft" }),
@@ -119,7 +120,9 @@ describe("SessionManager session state", () => {
 
 	// Guards the agents-view deactivate path: opening a deleted file and appending
 	// would recreate a stub session at the old path, so the caller must skip it.
-	it("recreates a stub when archiving a deleted file, which the existsSync guard prevents", async () => {
+	// Fork: with lazy drafts the open+append of session_state no longer recreates
+	// a stub at all, which makes the caller-side guard doubly safe.
+	it("does not recreate a stub when archiving a deleted file (fork: lazy drafts)", async () => {
 		const tempDir = mkdtempSync(join(tmpdir(), "session-state-deleted-"));
 		try {
 			const cwd = join(tempDir, "project");
@@ -131,12 +134,12 @@ describe("SessionManager session state", () => {
 			rmSync(sessionFile);
 			expect(existsSync(sessionFile)).toBe(false);
 
-			// Without the guard, the open+append recreates a fresh stub on disk.
+			// Fork: session_state bookkeeping never creates a missing file.
 			SessionManager.open(sessionFile, sessionDir).appendSessionState({ status: "archived" });
-			expect(existsSync(sessionFile)).toBe(true);
+			expect(existsSync(sessionFile)).toBe(false);
 
 			// The guard the caller uses skips a missing file, leaving nothing behind.
-			rmSync(sessionFile);
+			rmSync(sessionFile, { force: true });
 			if (existsSync(sessionFile)) {
 				SessionManager.open(sessionFile, sessionDir).appendSessionState({ status: "archived" });
 			}
@@ -154,7 +157,8 @@ describe("SessionManager session state", () => {
 			const session = SessionManager.create(cwd, sessionDir);
 
 			session.appendMessage(userMsg("hide me"));
-			// Flush a header + state entry, then append the legacy raw "sleep"/"hidden"
+			session.appendMessage(assistantMsg("ok")); // forces a flush to disk
+			// Append a state entry, then the legacy raw "sleep"/"hidden"
 			// entries older daemons wrote; both must normalize to "archived" on read.
 			session.appendSessionState({ status: "active" });
 			const sessionFile = session.getSessionFile();
@@ -183,6 +187,7 @@ describe("SessionManager session state", () => {
 			const session = SessionManager.create(cwd, sessionDir);
 
 			session.appendMessage(userMsg("hi"));
+			session.appendMessage(assistantMsg("hello")); // forces a flush to disk
 			session.appendSessionState({ status: "active" });
 			const sessionFile = session.getSessionFile();
 			expect(sessionFile).toBeDefined();
@@ -219,7 +224,10 @@ describe("SessionManager session state", () => {
 		}
 	});
 
-	it("recreates the session directory when lifecycle state is the first persisted entry", () => {
+	it("does not create the session file for lifecycle state alone (fork: lazy drafts)", () => {
+		// Fork behavior: session_state is daemon bookkeeping and must not create
+		// the session file before the first assistant response, so launching the
+		// TUI never leaves an empty draft file on disk.
 		const tempDir = mkdtempSync(join(tmpdir(), "session-state-missing-dir-"));
 		try {
 			const cwd = join(tempDir, "project");
@@ -228,13 +236,20 @@ describe("SessionManager session state", () => {
 			const sessionFile = session.getSessionFile();
 			expect(sessionFile).toBeDefined();
 
+			session.appendSessionState({ status: "active" });
+			expect(existsSync(sessionFile!)).toBe(false);
+
+			// The skipped entry is still in memory and lands on disk with the
+			// first real turn, recreating the directory if it went missing.
 			rmSync(sessionDir, { recursive: true, force: true });
-			session.appendSessionState({ status: "archived" });
+			session.appendMessage(userMsg("hello"));
+			session.appendMessage(assistantMsg("hi"));
 
 			expect(existsSync(sessionFile!)).toBe(true);
 			const entries = loadEntriesFromFile(sessionFile!);
 			expect(entries[0]).toMatchObject({ type: "session", id: session.getSessionId() });
 			expect(entries.filter((entry) => entry.type === "session_state")).toHaveLength(1);
+			expect(entries.filter((entry) => entry.type === "message")).toHaveLength(2);
 		} finally {
 			rmSync(tempDir, { recursive: true, force: true });
 		}
