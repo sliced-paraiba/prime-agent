@@ -20,13 +20,6 @@ const LONG_RUNNING_WORK_PROMPT = [
 const USER_PROGRESS_PROMPT =
 	"As the user-facing root agent, when work follows a plan, uses many subagents, or spans multiple turns, proactively give regular concise progress updates so the user does not have to ask. State the current plan, what has completed, any blockers, the proposed fixes, and the next actions. Lead with user-visible outcomes rather than internal process or gate names. Mention internal details only when they explain a blocker or decision. Send an update at meaningful milestones and before ending a turn while work is still running. Do not repeat unchanged status or interrupt short work with unnecessary updates.";
 
-const SIMPLIFIED_TECHNICAL_ENGLISH_PROMPT = [
-	"Use simplified technical English by default for user-facing prose.",
-	"Prefer short sentences, common words, and concrete verbs. State one main action or fact per sentence when practical. Use lists for steps or conditions.",
-	"Keep necessary technical terms, names, commands, code, paths, and exact quoted text unchanged. State uncertainty directly.",
-	"Treat this as clarity guidance, not a claim of formal ASD-STE100 compliance. Preserve a user-requested format, tone, terminology, and necessary precision.",
-].join("\n");
-
 const REPL_CONTROL_PROMPT = [
 	"The `ipython` tool is a persistent Python REPL — the agent's long-lived control environment for reasoning, context management, state, tool orchestration, and recursive subcalls. Top-level `await` works directly. Use it to keep intermediate variables, inspect and transform outputs, and write small helper functions. Compaction removes individual variables whose serialized form exceeds 16 MiB; keep large source data on disk and reload it when needed.",
 	"",
@@ -98,8 +91,6 @@ export function buildRlmPrompt(options: RlmPromptOptions): string {
 		LONG_RUNNING_WORK_PROMPT,
 		"",
 		...(depth === 0 ? [USER_PROGRESS_PROMPT, ""] : []),
-		SIMPLIFIED_TECHNICAL_ENGLISH_PROMPT,
-		"",
 		`Working directory: ${cwd}`,
 		`Conversation log: ${messagesPath}`,
 		`Recursive agent depth: ${depth}`,
