@@ -129,9 +129,20 @@ async def run(*paths: str) -> str:
         FileNotFoundError: If a path does not exist or is not a regular file.
         ValueError: If a file is not a supported audio file, is too large as a
             source file, or would exceed the base64 attachment payload cap.
+        RuntimeError: If the current model cannot accept audio.
     """
     if not paths:
         raise ValueError("attach_audio requires at least one audio path")
+
+    from rlm import host_request
+
+    info = await host_request("model.info")
+    if "audio" not in info.get("input", []):
+        model_id = info.get("id") or "the current model"
+        raise RuntimeError(
+            f"{model_id} does not support audio input. "
+            "Tell the user to switch to an audio-capable model to load audio into context."
+        )
 
     # Validate every path before emitting anything, so a later failure never
     # leaves a partial subset injected.
