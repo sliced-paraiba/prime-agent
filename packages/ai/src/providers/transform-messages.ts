@@ -1,39 +1,59 @@
 import type {
 	Api,
 	AssistantMessage,
+	AudioContent,
 	ImageContent,
 	Message,
 	Model,
 	TextContent,
 	ToolCall,
 	ToolResultMessage,
+	VideoContent,
 } from "../types.js";
+
+type UserContentBlock = TextContent | ImageContent | AudioContent | VideoContent;
 
 const NON_VISION_USER_IMAGE_PLACEHOLDER = "(image omitted: model does not support images)";
 const NON_VISION_TOOL_IMAGE_PLACEHOLDER = "(tool image omitted: model does not support images)";
 
-function replaceImagesWithPlaceholder(content: (TextContent | ImageContent)[], placeholder: string): TextContent[] {
-	const result: TextContent[] = [];
+function mediaPlaceholder(kind: string, isToolResult: boolean): string {
+	if (kind === "image") {
+		return isToolResult ? NON_VISION_TOOL_IMAGE_PLACEHOLDER : NON_VISION_USER_IMAGE_PLACEHOLDER;
+	}
+	return isToolResult
+		? `(tool ${kind} omitted: model does not support ${kind})`
+		: `(${kind} omitted: model does not support ${kind})`;
+}
+
+function replaceUnsupportedMedia(
+	content: UserContentBlock[],
+	unsupported: ReadonlySet<string>,
+	isToolResult: boolean,
+): UserContentBlock[] {
+	const result: UserContentBlock[] = [];
 	let previousWasPlaceholder = false;
 
 	for (const block of content) {
-		if (block.type === "image") {
+		if (unsupported.has(block.type)) {
 			if (!previousWasPlaceholder) {
-				result.push({ type: "text", text: placeholder });
+				result.push({ type: "text", text: mediaPlaceholder(block.type, isToolResult) });
 			}
 			previousWasPlaceholder = true;
 			continue;
 		}
 
 		result.push(block);
-		previousWasPlaceholder = block.text === placeholder;
+		previousWasPlaceholder = false;
 	}
 
 	return result;
 }
 
-function downgradeUnsupportedImages<TApi extends Api>(messages: Message[], model: Model<TApi>): Message[] {
-	if (model.input.includes("image")) {
+function downgradeUnsupportedMedia<TApi extends Api>(messages: Message[], model: Model<TApi>): Message[] {
+	const unsupported = new Set<string>(
+		["image", "audio", "video"].filter((kind) => !model.input.includes(kind as never)),
+	);
+	if (unsupported.size === 0) {
 		return messages;
 	}
 
@@ -41,14 +61,14 @@ function downgradeUnsupportedImages<TApi extends Api>(messages: Message[], model
 		if (msg.role === "user" && Array.isArray(msg.content)) {
 			return {
 				...msg,
-				content: replaceImagesWithPlaceholder(msg.content, NON_VISION_USER_IMAGE_PLACEHOLDER),
+				content: replaceUnsupportedMedia(msg.content, unsupported, false),
 			};
 		}
 
 		if (msg.role === "toolResult") {
 			return {
 				...msg,
-				content: replaceImagesWithPlaceholder(msg.content, NON_VISION_TOOL_IMAGE_PLACEHOLDER),
+				content: replaceUnsupportedMedia(msg.content, unsupported, true),
 			};
 		}
 
@@ -67,7 +87,7 @@ export function transformMessages<TApi extends Api>(
 	normalizeToolCallId?: (id: string, model: Model<TApi>, source: AssistantMessage) => string,
 ): Message[] {
 	const toolCallIdMap = new Map<string, string>();
-	const imageAwareMessages = downgradeUnsupportedImages(messages, model);
+	const imageAwareMessages = downgradeUnsupportedMedia(messages, model);
 
 	const transformed = imageAwareMessages.map((msg) => {
 		if (msg.role === "user") {

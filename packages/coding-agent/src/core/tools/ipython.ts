@@ -1,9 +1,9 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentTool } from "@earendil-works/pi-agent-core";
-import type { ImageContent, TextContent } from "@earendil-works/pi-ai";
+import type { AudioContent, ImageContent, TextContent, VideoContent } from "@earendil-works/pi-ai";
 import { type Static, Type } from "typebox";
-import { IMAGE_MIME_TYPES } from "../../utils/mime.js";
+import { AUDIO_MIME_TYPES, IMAGE_MIME_TYPES, VIDEO_MIME_TYPES } from "../../utils/mime.js";
 import { resolveKernelBashShell } from "../../utils/shell.js";
 import type { ExtensionContext, ToolDefinition } from "../extensions/types.js";
 import { withKernelBootPermit } from "../kernel/boot-gate.js";
@@ -667,12 +667,22 @@ async function executeWithBusyKernelChoice(
 	}
 }
 
-/** Turn kernel image attachments into `ImageContent` blocks; non-image types are dropped. */
-export function imageBlocksFromAttachments(attachments: readonly KernelAttachment[] | undefined): ImageContent[] {
+/** Turn kernel media attachments into content blocks; unsupported types are dropped. */
+export function mediaBlocksFromAttachments(
+	attachments: readonly KernelAttachment[] | undefined,
+): (ImageContent | AudioContent | VideoContent)[] {
 	if (!attachments) return [];
-	return attachments
-		.filter((a) => IMAGE_MIME_TYPES.has(a.mimeType))
-		.map((a) => ({ type: "image", data: a.data, mimeType: a.mimeType }));
+	const blocks: (ImageContent | AudioContent | VideoContent)[] = [];
+	for (const a of attachments) {
+		if (IMAGE_MIME_TYPES.has(a.mimeType)) {
+			blocks.push({ type: "image", data: a.data, mimeType: a.mimeType });
+		} else if (AUDIO_MIME_TYPES.has(a.mimeType)) {
+			blocks.push({ type: "audio", data: a.data, mimeType: a.mimeType });
+		} else if (VIDEO_MIME_TYPES.has(a.mimeType)) {
+			blocks.push({ type: "video", data: a.data, mimeType: a.mimeType });
+		}
+	}
+	return blocks;
 }
 
 export function createIpythonToolDefinition(
@@ -735,8 +745,11 @@ export function createIpythonToolDefinition(
 					text = text ? `${KERNEL_RESTART_NOTICE}\n\n${text}` : KERNEL_RESTART_NOTICE;
 				}
 
-				const imageBlocks = imageBlocksFromAttachments(r.attachments);
-				const content: (TextContent | ImageContent)[] = [{ type: "text", text: text || "" }, ...imageBlocks];
+				const mediaBlocks = mediaBlocksFromAttachments(r.attachments);
+				const content: (TextContent | ImageContent | AudioContent | VideoContent)[] = [
+					{ type: "text", text: text || "" },
+					...mediaBlocks,
+				];
 
 				return {
 					content,

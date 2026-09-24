@@ -1,5 +1,5 @@
 import { access, readFile, stat } from "node:fs/promises";
-import type { ImageContent } from "@earendil-works/pi-ai";
+import type { AudioContent, ImageContent, VideoContent } from "@earendil-works/pi-ai";
 import chalk from "chalk";
 import { resolve } from "path";
 import { resolveReadPath } from "../core/tools/path-utils.js";
@@ -8,7 +8,7 @@ import { detectSupportedImageMimeTypeFromFile } from "../utils/mime.js";
 
 export interface ProcessedFiles {
 	text: string;
-	images: ImageContent[];
+	images: (ImageContent | AudioContent | VideoContent)[];
 }
 
 export interface ProcessFileOptions {
@@ -18,7 +18,7 @@ export interface ProcessFileOptions {
 export async function processFileArguments(fileArgs: string[], options?: ProcessFileOptions): Promise<ProcessedFiles> {
 	const autoResizeImages = options?.autoResizeImages ?? true;
 	let text = "";
-	const images: ImageContent[] = [];
+	const images: (ImageContent | AudioContent | VideoContent)[] = [];
 
 	for (const fileArg of fileArgs) {
 		const absolutePath = resolve(resolveReadPath(fileArg, process.cwd()));

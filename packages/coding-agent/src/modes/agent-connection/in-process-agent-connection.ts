@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 import type { AgentMessage, ThinkingLevel } from "@earendil-works/pi-agent-core";
-import type { ImageContent, ServiceTier, Transport } from "@earendil-works/pi-ai";
+import type { AudioContent, ImageContent, ServiceTier, Transport, VideoContent } from "@earendil-works/pi-ai";
 import type { AgentSessionMessageReceipt, AgentSessionMessageSafetyStatus } from "../../core/agent-messages.js";
 import type { AgentSessionRuntime } from "../../core/agent-session-runtime.js";
 import type { AgentAutonomousStatus } from "../../core/autonomous.js";
@@ -424,11 +424,11 @@ export class InProcessAgentConnection implements AgentConnection {
 		return true;
 	}
 
-	async steer(message: string, images?: ImageContent[]): Promise<void> {
+	async steer(message: string, images?: (ImageContent | AudioContent | VideoContent)[]): Promise<void> {
 		await this.session.steer(message, images, { resumeIfIdle: true });
 	}
 
-	async followUp(message: string, images?: ImageContent[]): Promise<void> {
+	async followUp(message: string, images?: (ImageContent | AudioContent | VideoContent)[]): Promise<void> {
 		await this.session.followUp(message, images, { resumeIfIdle: true });
 	}
 

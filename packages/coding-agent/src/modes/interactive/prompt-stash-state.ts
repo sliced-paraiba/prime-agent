@@ -1,11 +1,11 @@
-import type { ImageContent } from "@earendil-works/pi-ai";
+import type { AudioContent, ImageContent, VideoContent } from "@earendil-works/pi-ai";
 import type { EditorPasteSnapshot } from "@earendil-works/pi-tui";
 
 export interface PromptStash {
 	text: string;
 	expandedText?: string;
 	pasteSnapshot?: EditorPasteSnapshot;
-	images?: readonly (readonly [number, ImageContent])[];
+	images?: readonly (readonly [number, ImageContent | AudioContent | VideoContent])[];
 	restoreOnOpen?: boolean;
 }
 

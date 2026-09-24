@@ -73,7 +73,7 @@ interface ToolCall {
 ```typescript
 interface UserMessage {
   role: "user";
-  content: string | (TextContent | ImageContent)[];
+  content: string | (TextContent | ImageContent | AudioContent | VideoContent)[];
   timestamp: number;  // Unix ms
 }
 
@@ -93,7 +93,7 @@ interface ToolResultMessage {
   role: "toolResult";
   toolCallId: string;
   toolName: string;
-  content: (TextContent | ImageContent)[];
+  content: (TextContent | ImageContent | AudioContent | VideoContent)[];
   details?: any;      // Tool-specific metadata
   isError: boolean;
   timestamp: number;
@@ -133,7 +133,7 @@ interface BashExecutionMessage {
 interface CustomMessage {
   role: "custom";
   customType: string;            // Extension identifier
-  content: string | (TextContent | ImageContent)[];
+  content: string | (TextContent | ImageContent | AudioContent | VideoContent)[];
   display: boolean;              // Show in TUI
   details?: any;                 // Extension-specific metadata
   timestamp: number;
@@ -288,7 +288,7 @@ Extension-injected messages that DO participate in LLM context.
 ```
 
 Fields:
-- `content`: String or `(TextContent | ImageContent)[]` (same as UserMessage)
+- `content`: String or `(TextContent | ImageContent | AudioContent | VideoContent)[]` (same as UserMessage)
 - `display`: `true` = show in TUI with distinct styling, `false` = hidden
 - `details`: Optional extension-specific metadata (not sent to LLM)
 

@@ -1,5 +1,12 @@
 import type { AgentMessage, ThinkingLevel } from "@earendil-works/pi-agent-core";
-import type { ImageContent, ServiceTier, TextContent, Transport } from "@earendil-works/pi-ai";
+import type {
+	AudioContent,
+	ImageContent,
+	ServiceTier,
+	TextContent,
+	Transport,
+	VideoContent,
+} from "@earendil-works/pi-ai";
 import type {
 	AgentSessionMessageDeliveryMode,
 	AgentSessionMessageReceipt,
@@ -452,8 +459,8 @@ export type DaemonCommand =
 			type: "prompt";
 			activeSessionId: string;
 			message: string;
-			content?: (TextContent | ImageContent)[];
-			images?: ImageContent[];
+			content?: (TextContent | ImageContent | AudioContent | VideoContent)[];
+			images?: (ImageContent | AudioContent | VideoContent)[];
 			streamingBehavior?: "steer" | "followUp";
 			queueIfBusy?: boolean;
 			expandPromptTemplates?: boolean;
@@ -476,8 +483,8 @@ export type DaemonCommand =
 			type: "prompt_and_wait";
 			activeSessionId: string;
 			message: string;
-			content?: (TextContent | ImageContent)[];
-			images?: ImageContent[];
+			content?: (TextContent | ImageContent | AudioContent | VideoContent)[];
+			images?: (ImageContent | AudioContent | VideoContent)[];
 			streamingBehavior?: "steer" | "followUp";
 			queueIfBusy?: boolean;
 			expandPromptTemplates?: boolean;
@@ -490,8 +497,8 @@ export type DaemonCommand =
 			type: "steer";
 			activeSessionId: string;
 			message: string;
-			content?: (TextContent | ImageContent)[];
-			images?: ImageContent[];
+			content?: (TextContent | ImageContent | AudioContent | VideoContent)[];
+			images?: (ImageContent | AudioContent | VideoContent)[];
 			queueKey?: string;
 			expandPromptTemplates?: boolean;
 			agentMessageId?: string;
@@ -503,8 +510,8 @@ export type DaemonCommand =
 			type: "follow_up";
 			activeSessionId: string;
 			message: string;
-			content?: (TextContent | ImageContent)[];
-			images?: ImageContent[];
+			content?: (TextContent | ImageContent | AudioContent | VideoContent)[];
+			images?: (ImageContent | AudioContent | VideoContent)[];
 			queueKey?: string;
 			expandPromptTemplates?: boolean;
 			agentMessageId?: string;

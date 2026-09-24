@@ -1,4 +1,4 @@
-import type { ImageContent, TextContent } from "@earendil-works/pi-ai";
+import type { AudioContent, ImageContent, TextContent, VideoContent } from "@earendil-works/pi-ai";
 import type { CustomMessage } from "./messages.js";
 
 export const GOAL_STATE_CUSTOM_TYPE = "thread_goal_state";
@@ -160,14 +160,14 @@ export function goalHostResponse(goal: GoalState, includeCompletionReport: boole
 export function createGoalContextMessage(
 	goal: GoalState,
 	kind: GoalContextKind,
-	images?: ImageContent[],
+	images?: (ImageContent | AudioContent | VideoContent)[],
 ): CustomMessage<GoalContextDetails> {
 	if (!goal.objective) {
 		throw new Error("Cannot create goal context without an objective.");
 	}
 	const prompt = goalContextPrompt(goal, kind);
 	const text = `[goal: ${GOAL_CONTEXT_KIND_LABELS[kind]}]\n\n${prompt}`;
-	const content: string | (TextContent | ImageContent)[] =
+	const content: string | (TextContent | ImageContent | AudioContent | VideoContent)[] =
 		images && images.length > 0 ? [{ type: "text", text }, ...images] : text;
 	return {
 		role: "custom",

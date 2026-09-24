@@ -2,6 +2,7 @@ import { registerApiProvider, unregisterApiProviders } from "../api-registry.js"
 import type {
 	AssistantMessage,
 	AssistantMessageEventStream,
+	AudioContent,
 	Context,
 	ImageContent,
 	Message,
@@ -14,6 +15,7 @@ import type {
 	ToolCall,
 	ToolResultMessage,
 	Usage,
+	VideoContent,
 } from "../types.js";
 import { createAssistantMessageEventStream } from "../utils/event-stream.js";
 
@@ -38,7 +40,7 @@ export interface FauxModelDefinition {
 	id: string;
 	name?: string;
 	reasoning?: boolean;
-	input?: ("text" | "image")[];
+	input?: ("text" | "image" | "audio" | "video")[];
 	cost?: { input: number; output: number; cacheRead: number; cacheWrite: number };
 	contextWindow?: number;
 	maxTokens?: number;
@@ -133,7 +135,7 @@ function randomId(prefix: string): string {
 	return `${prefix}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
 }
 
-function contentToText(content: string | Array<TextContent | ImageContent>): string {
+function contentToText(content: string | Array<TextContent | ImageContent | AudioContent | VideoContent>): string {
 	if (typeof content === "string") {
 		return content;
 	}
@@ -142,7 +144,7 @@ function contentToText(content: string | Array<TextContent | ImageContent>): str
 			if (block.type === "text") {
 				return block.text;
 			}
-			return `[image:${block.mimeType}:${block.data.length}]`;
+			return `[${block.type}:${block.mimeType}:${block.data.length}]`;
 		})
 		.join("\n");
 }
@@ -409,7 +411,7 @@ export function registerFauxProvider(options: RegisterFauxProviderOptions = {}):
 					id: DEFAULT_MODEL_ID,
 					name: DEFAULT_MODEL_NAME,
 					reasoning: false,
-					input: ["text", "image"] as ("text" | "image")[],
+					input: ["text", "image"] as ("text" | "image" | "audio" | "video")[],
 					cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
 					contextWindow: 128000,
 					maxTokens: 16384,

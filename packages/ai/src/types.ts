@@ -178,6 +178,22 @@ export interface ImageContent {
 	mimeType: string; // e.g., "image/jpeg", "image/png"
 }
 
+export interface AudioContent {
+	type: "audio";
+	data: string; // base64 encoded audio data
+	mimeType: string; // e.g., "audio/wav", "audio/mpeg"
+}
+
+export interface VideoContent {
+	type: "video";
+	data: string; // base64 encoded video data
+	mimeType: string; // e.g., "video/mp4", "video/webm"
+	/** Frame sampling hint for providers that accept one. */
+	fps?: number;
+	/** Provider-defined resolution tier (e.g. "default" | "max"). */
+	mediaResolution?: string;
+}
+
 export interface ToolCall {
 	type: "toolCall";
 	id: string;
@@ -205,7 +221,7 @@ export type StopReason = "stop" | "length" | "toolUse" | "error" | "aborted";
 
 export interface UserMessage {
 	role: "user";
-	content: string | (TextContent | ImageContent)[];
+	content: string | (TextContent | ImageContent | AudioContent | VideoContent)[];
 	timestamp: number; // Unix timestamp in milliseconds
 }
 
@@ -229,7 +245,7 @@ export interface ToolResultMessage<TDetails = any> {
 	role: "toolResult";
 	toolCallId: string;
 	toolName: string;
-	content: (TextContent | ImageContent)[]; // Supports text and images
+	content: (TextContent | ImageContent | AudioContent | VideoContent)[]; // Supports text and media
 	details?: TDetails;
 	isError: boolean;
 	timestamp: number; // Unix timestamp in milliseconds
@@ -436,7 +452,7 @@ export interface Model<TApi extends Api> {
 	 * Missing keys use provider defaults. null marks a level as unsupported.
 	 */
 	thinkingLevelMap?: ThinkingLevelMap;
-	input: ("text" | "image")[];
+	input: ("text" | "image" | "audio" | "video")[];
 	cost: {
 		input: number; // $/million tokens
 		output: number; // $/million tokens

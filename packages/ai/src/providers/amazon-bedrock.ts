@@ -738,7 +738,9 @@ function convertMessages(
 						content: m.content.map((c) =>
 							c.type === "image"
 								? { image: createImageBlock(c.mimeType, c.data) }
-								: { text: sanitizeSurrogates(c.text) },
+								: {
+										text: sanitizeSurrogates(c.type === "text" ? c.text : `[${c.type} omitted: unsupported]`),
+									},
 						),
 						status: m.isError ? ToolResultStatus.ERROR : ToolResultStatus.SUCCESS,
 					},
@@ -753,7 +755,11 @@ function convertMessages(
 							content: nextMsg.content.map((c) =>
 								c.type === "image"
 									? { image: createImageBlock(c.mimeType, c.data) }
-									: { text: sanitizeSurrogates(c.text) },
+									: {
+											text: sanitizeSurrogates(
+												c.type === "text" ? c.text : `[${c.type} omitted: unsupported]`,
+											),
+										},
 							),
 							status: nextMsg.isError ? ToolResultStatus.ERROR : ToolResultStatus.SUCCESS,
 						},

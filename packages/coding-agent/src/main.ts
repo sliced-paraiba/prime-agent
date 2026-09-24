@@ -7,7 +7,14 @@
 
 import { dirname, join, resolve } from "node:path";
 import { createInterface } from "node:readline";
-import { type Api, type ImageContent, type Model, modelsAreEqual } from "@earendil-works/pi-ai";
+import {
+	type Api,
+	type AudioContent,
+	type ImageContent,
+	type Model,
+	modelsAreEqual,
+	type VideoContent,
+} from "@earendil-works/pi-ai";
 import { registerBuiltinMcpOAuthProviders } from "@earendil-works/pi-ai/mcp";
 import { ProcessTerminal, setKeybindings, TUI } from "@earendil-works/pi-tui";
 import chalk from "chalk";
@@ -315,7 +322,7 @@ async function prepareInitialMessage(
 	stdinContent?: string,
 ): Promise<{
 	initialMessage?: string;
-	initialImages?: ImageContent[];
+	initialImages?: (ImageContent | AudioContent | VideoContent)[];
 }> {
 	if (parsed.fileArgs.length === 0) {
 		return buildInitialMessage({ parsed, stdinContent });

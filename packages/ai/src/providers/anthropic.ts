@@ -17,6 +17,7 @@ import type {
 	AnthropicMessagesCompat,
 	Api,
 	AssistantMessage,
+	AudioContent,
 	CacheRetention,
 	Context,
 	ImageContent,
@@ -31,6 +32,7 @@ import type {
 	Tool,
 	ToolCall,
 	ToolResultMessage,
+	VideoContent,
 } from "../types.js";
 import { AssistantMessageEventStream } from "../utils/event-stream.js";
 import { headersToRecord } from "../utils/headers.js";
@@ -122,7 +124,7 @@ const fromClaudeCodeName = (name: string, tools?: Tool[]) => {
 /**
  * Convert content blocks to Anthropic API format
  */
-function convertContentBlocks(content: (TextContent | ImageContent)[]):
+function convertContentBlocks(raw: Array<TextContent | ImageContent | AudioContent | VideoContent>):
 	| string
 	| Array<
 			| { type: "text"; text: string }
@@ -135,6 +137,7 @@ function convertContentBlocks(content: (TextContent | ImageContent)[]):
 					};
 			  }
 	  > {
+	const content = raw.filter((c): c is TextContent | ImageContent => c.type === "text" || c.type === "image");
 	const hasImages = content.some((c) => c.type === "image");
 	if (!hasImages) {
 		return sanitizeSurrogates(content.map((c) => (c as TextContent).text).join("\n"));

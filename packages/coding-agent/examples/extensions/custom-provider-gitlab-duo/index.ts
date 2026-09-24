@@ -49,7 +49,7 @@ interface GitLabModel {
 	backend: Backend;
 	baseUrl: string;
 	reasoning: boolean;
-	input: ("text" | "image")[];
+	input: ("text" | "image" | "audio" | "video")[];
 	cost: { input: number; output: number; cacheRead: number; cacheWrite: number };
 	contextWindow: number;
 	maxTokens: number;

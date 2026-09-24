@@ -1,16 +1,16 @@
-import type { ImageContent } from "@earendil-works/pi-ai";
+import type { AudioContent, ImageContent, VideoContent } from "@earendil-works/pi-ai";
 import type { Args } from "./args.js";
 
 export interface InitialMessageInput {
 	parsed: Args;
 	fileText?: string;
-	fileImages?: ImageContent[];
+	fileImages?: (ImageContent | AudioContent | VideoContent)[];
 	stdinContent?: string;
 }
 
 export interface InitialMessageResult {
 	initialMessage?: string;
-	initialImages?: ImageContent[];
+	initialImages?: (ImageContent | AudioContent | VideoContent)[];
 }
 
 /**

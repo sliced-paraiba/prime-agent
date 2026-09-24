@@ -6,7 +6,7 @@
 
 import type { ChildProcess } from "node:child_process";
 import type { AgentEvent, AgentMessage, ThinkingLevel } from "@earendil-works/pi-agent-core";
-import type { ImageContent } from "@earendil-works/pi-ai";
+import type { AudioContent, ImageContent, VideoContent } from "@earendil-works/pi-ai";
 import type { AgentSessionMessageReceipt, AgentSessionMessageSafetyStatus } from "../../core/agent-messages.js";
 import type { BashResult } from "../../core/bash-executor.js";
 import type { CompactionResult } from "../../core/compaction/index.js";
@@ -195,21 +195,21 @@ export class RpcClient {
 	 * Returns immediately after sending; use onEvent() to receive streaming events.
 	 * Use waitForIdle() to wait for completion.
 	 */
-	async prompt(message: string, images?: ImageContent[]): Promise<void> {
+	async prompt(message: string, images?: (ImageContent | AudioContent | VideoContent)[]): Promise<void> {
 		await this.send({ type: "prompt", message, images });
 	}
 
 	/**
 	 * Queue a steering message to interrupt the agent mid-run.
 	 */
-	async steer(message: string, images?: ImageContent[]): Promise<void> {
+	async steer(message: string, images?: (ImageContent | AudioContent | VideoContent)[]): Promise<void> {
 		await this.send({ type: "steer", message, images });
 	}
 
 	/**
 	 * Queue a follow-up message to be processed after the agent finishes.
 	 */
-	async followUp(message: string, images?: ImageContent[]): Promise<void> {
+	async followUp(message: string, images?: (ImageContent | AudioContent | VideoContent)[]): Promise<void> {
 		await this.send({ type: "follow_up", message, images });
 	}
 
@@ -583,7 +583,11 @@ export class RpcClient {
 	/**
 	 * Send prompt and wait for completion, returning all events.
 	 */
-	async promptAndWait(message: string, images?: ImageContent[], timeout = 60000): Promise<AgentEvent[]> {
+	async promptAndWait(
+		message: string,
+		images?: (ImageContent | AudioContent | VideoContent)[],
+		timeout = 60000,
+	): Promise<AgentEvent[]> {
 		const eventsPromise = this.collectEvents(timeout);
 		await this.prompt(message, images);
 		return eventsPromise;

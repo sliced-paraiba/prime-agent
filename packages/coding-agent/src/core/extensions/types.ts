@@ -19,6 +19,7 @@ import type {
 	Api,
 	AssistantMessageEvent,
 	AssistantMessageEventStream,
+	AudioContent,
 	Context,
 	ImageContent,
 	Model,
@@ -27,6 +28,7 @@ import type {
 	SimpleStreamOptions,
 	TextContent,
 	ToolResultMessage,
+	VideoContent,
 } from "@earendil-works/pi-ai";
 import type {
 	AutocompleteItem,
@@ -371,7 +373,7 @@ export interface ReplacedSessionContext extends ExtensionCommandContext {
 	): Promise<void>;
 
 	sendUserMessage(
-		content: string | (TextContent | ImageContent)[],
+		content: string | (TextContent | ImageContent | AudioContent | VideoContent)[],
 		options?: { deliverAs?: "steer" | "followUp" },
 	): Promise<void>;
 }
@@ -641,7 +643,7 @@ export interface BeforeAgentStartEvent {
 	/** The raw user prompt text (after expansion). */
 	prompt: string;
 	/** Images attached to the user prompt, if any. */
-	images?: ImageContent[];
+	images?: (ImageContent | AudioContent | VideoContent)[];
 	/** The fully assembled system prompt string. */
 	systemPrompt: string;
 	/** Structured options used to build the system prompt. Extensions can inspect this to understand what Pi loaded without re-discovering resources. */
@@ -766,7 +768,7 @@ export interface InputEvent {
 	/** The input text */
 	text: string;
 	/** Attached images, if any */
-	images?: ImageContent[];
+	images?: (ImageContent | AudioContent | VideoContent)[];
 	/** Where the input came from */
 	source: InputSource;
 }
@@ -774,7 +776,7 @@ export interface InputEvent {
 /** Result from input event handler */
 export type InputEventResult =
 	| { action: "continue" }
-	| { action: "transform"; text: string; images?: ImageContent[] }
+	| { action: "transform"; text: string; images?: (ImageContent | AudioContent | VideoContent)[] }
 	| { action: "handled" };
 interface ToolCallEventBase {
 	type: "tool_call";
@@ -813,7 +815,7 @@ interface ToolResultEventBase {
 	type: "tool_result";
 	toolCallId: string;
 	input: Record<string, unknown>;
-	content: (TextContent | ImageContent)[];
+	content: (TextContent | ImageContent | AudioContent | VideoContent)[];
 	isError: boolean;
 }
 
@@ -931,7 +933,7 @@ export interface UserBashEventResult {
 }
 
 export interface ToolResultEventResult {
-	content?: (TextContent | ImageContent)[];
+	content?: (TextContent | ImageContent | AudioContent | VideoContent)[];
 	details?: unknown;
 	isError?: boolean;
 }
@@ -1086,7 +1088,7 @@ export interface ExtensionAPI {
 	 * When the agent is streaming, use deliverAs to specify how to queue the message.
 	 */
 	sendUserMessage(
-		content: string | (TextContent | ImageContent)[],
+		content: string | (TextContent | ImageContent | AudioContent | VideoContent)[],
 		options?: { deliverAs?: "steer" | "followUp" },
 	): void;
 
@@ -1243,7 +1245,7 @@ export interface ProviderModelConfig {
 	/** Maps pi thinking levels to provider/model-specific values; null marks a level unsupported. */
 	thinkingLevelMap?: Model<Api>["thinkingLevelMap"];
 	/** Supported input types. */
-	input: ("text" | "image")[];
+	input: ("text" | "image" | "audio" | "video")[];
 	/** Cost per token (for tracking, can be 0). */
 	cost: { input: number; output: number; cacheRead: number; cacheWrite: number };
 	/** Maximum context window size in tokens. */
@@ -1286,7 +1288,7 @@ export type SendMessageHandler = <T = unknown>(
 ) => void;
 
 export type SendUserMessageHandler = (
-	content: string | (TextContent | ImageContent)[],
+	content: string | (TextContent | ImageContent | AudioContent | VideoContent)[],
 	options?: { deliverAs?: "steer" | "followUp" },
 ) => void;
 

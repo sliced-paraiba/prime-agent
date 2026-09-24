@@ -1,4 +1,5 @@
 import {
+	type AudioContent,
 	createAssistantMessageDiagnostic,
 	type ImageContent,
 	type Message,
@@ -9,6 +10,7 @@ import {
 	type TextContent,
 	type ThinkingBudgets,
 	type Transport,
+	type VideoContent,
 } from "@earendil-works/pi-ai";
 import { runAgentLoop, runAgentLoopContinue } from "./agent-loop.js";
 import type {
@@ -358,8 +360,11 @@ export class Agent {
 	}
 
 	async prompt(message: AgentMessage | AgentMessage[]): Promise<void>;
-	async prompt(input: string, images?: ImageContent[]): Promise<void>;
-	async prompt(input: string | AgentMessage | AgentMessage[], images?: ImageContent[]): Promise<void> {
+	async prompt(input: string, images?: (ImageContent | AudioContent | VideoContent)[]): Promise<void>;
+	async prompt(
+		input: string | AgentMessage | AgentMessage[],
+		images?: (ImageContent | AudioContent | VideoContent)[],
+	): Promise<void> {
 		if (this.activeRun) {
 			throw new Error(
 				"Agent is already processing a prompt. Use steer() or followUp() to queue messages, or wait for completion.",
@@ -424,7 +429,7 @@ export class Agent {
 
 	private normalizePromptInput(
 		input: string | AgentMessage | AgentMessage[],
-		images?: ImageContent[],
+		images?: (ImageContent | AudioContent | VideoContent)[],
 	): AgentMessage[] {
 		if (Array.isArray(input)) {
 			return input;
@@ -434,7 +439,7 @@ export class Agent {
 			return [input];
 		}
 
-		const content: Array<TextContent | ImageContent> = [{ type: "text", text: input }];
+		const content: Array<TextContent | ImageContent | AudioContent | VideoContent> = [{ type: "text", text: input }];
 		if (images && images.length > 0) {
 			content.push(...images);
 		}
