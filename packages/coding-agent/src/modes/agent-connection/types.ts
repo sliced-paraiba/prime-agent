@@ -1,5 +1,15 @@
 import type { AgentEvent, AgentMessage, ThinkingLevel } from "@earendil-works/pi-agent-core";
-import type { Api, ImageContent, Model, ServiceTier, TextContent, Transport, Usage } from "@earendil-works/pi-ai";
+import type {
+	Api,
+	AudioContent,
+	ImageContent,
+	Model,
+	ServiceTier,
+	TextContent,
+	Transport,
+	Usage,
+	VideoContent,
+} from "@earendil-works/pi-ai";
 import type { AgentSessionMessageReceipt, AgentSessionMessageSafetyStatus } from "../../core/agent-messages.js";
 import type { AuthSourceToken } from "../../core/auth-storage.js";
 import type { AgentAutonomousStatus } from "../../core/autonomous.js";
@@ -210,7 +220,7 @@ export interface AgentConnectionChildUsageAttributionEntry extends AgentConnecti
 export interface AgentConnectionCustomMessageEntry extends AgentConnectionSessionEntryBase {
 	type: "custom_message";
 	customType: string;
-	content: string | (TextContent | ImageContent)[];
+	content: string | (TextContent | ImageContent | AudioContent | VideoContent)[];
 	details?: unknown;
 	display: boolean;
 }
@@ -457,7 +467,7 @@ export class AgentConnectionPromptAdmissionError extends Error {
 }
 
 export interface AgentConnectionPromptOptions {
-	images?: ImageContent[];
+	images?: (ImageContent | AudioContent | VideoContent)[];
 	streamingBehavior?: "steer" | "followUp";
 	queueIfBusy?: boolean;
 	source?: InputSource;
@@ -750,8 +760,8 @@ export interface AgentConnection {
 	promptAndWait(message: string, options?: AgentConnectionPromptOptions): Promise<void>;
 	startSideQuestion(id: string, question: string, previousTurns?: AgentConnectionSideQuestionTurn[]): Promise<void>;
 	abortSideQuestion(id: string): Promise<boolean>;
-	steer(message: string, images?: ImageContent[]): Promise<void>;
-	followUp(message: string, images?: ImageContent[]): Promise<void>;
+	steer(message: string, images?: (ImageContent | AudioContent | VideoContent)[]): Promise<void>;
+	followUp(message: string, images?: (ImageContent | AudioContent | VideoContent)[]): Promise<void>;
 	abort(): Promise<void>;
 	/** Abort the active run and start all queued user steering together in one new turn; abort-only when the queue is empty. */
 	abortAndSendQueued(): Promise<void>;

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { realpathSync } from "node:fs";
 import { basename, isAbsolute, resolve } from "node:path";
 import type { AgentMessage, ThinkingLevel } from "@earendil-works/pi-agent-core";
-import type { ImageContent, ServiceTier, Transport } from "@earendil-works/pi-ai";
+import type { AudioContent, ImageContent, ServiceTier, Transport, VideoContent } from "@earendil-works/pi-ai";
 import { appendRotatingLog, getAgentLogPath, getDaemonLogPath } from "../../config.js";
 import type { AgentSessionMessageReceipt, AgentSessionMessageSafetyStatus } from "../../core/agent-messages.js";
 import type { AgentSessionEvent } from "../../core/agent-session.js";
@@ -1356,11 +1356,11 @@ export class DaemonAgentConnection implements AgentConnection {
 		return data.aborted;
 	}
 
-	async steer(message: string, images?: ImageContent[]): Promise<void> {
+	async steer(message: string, images?: (ImageContent | AudioContent | VideoContent)[]): Promise<void> {
 		await this.requestOk({ type: "steer", activeSessionId: this.activeSessionId, message, images });
 	}
 
-	async followUp(message: string, images?: ImageContent[]): Promise<void> {
+	async followUp(message: string, images?: (ImageContent | AudioContent | VideoContent)[]): Promise<void> {
 		await this.requestOk({ type: "follow_up", activeSessionId: this.activeSessionId, message, images });
 	}
 

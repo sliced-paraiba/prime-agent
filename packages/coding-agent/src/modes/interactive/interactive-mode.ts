@@ -6,6 +6,7 @@ import type { AgentMessage, ThinkingLevel } from "@earendil-works/pi-agent-core"
 import {
 	type Api,
 	type AssistantMessage,
+	type AudioContent,
 	type ImageContent,
 	type Message,
 	type Model,
@@ -13,6 +14,7 @@ import {
 	supportsFastMode,
 	supportsServiceTier,
 	type ToolCall,
+	type VideoContent,
 } from "@earendil-works/pi-ai";
 import { BUILTIN_MCP_CATALOG } from "@earendil-works/pi-ai/mcp";
 import { registerOAuthProvider, unregisterOAuthProvider } from "@earendil-works/pi-ai/oauth";
@@ -1105,7 +1107,7 @@ export function resolveInteractiveUpdateDaemonSocketPath(
 
 export interface InteractiveInitialPrompt {
 	text: string;
-	images?: ImageContent[];
+	images?: (ImageContent | AudioContent | VideoContent)[];
 }
 
 export interface InteractiveModeOptions {
@@ -1118,7 +1120,7 @@ export interface InteractiveModeOptions {
 	/** Initial message to send on startup (can include @file content) */
 	initialMessage?: string;
 	/** Images to attach to the initial message */
-	initialImages?: ImageContent[];
+	initialImages?: (ImageContent | AudioContent | VideoContent)[];
 	/** Additional text-only messages to send after the initial message. */
 	initialMessages?: string[];
 	/** Additional image-bearing prompts to send after the initial messages. */
@@ -1381,7 +1383,7 @@ export class InteractiveMode {
 	// MAX_PASTED_IMAGE_BYTES) so a marker resolves to its image whenever the text
 	// reappears — on submit, undo, history recall, retry, or dequeue. A submission
 	// attaches only the images whose markers are present in the sent text.
-	private pastedImages = new Map<number, ImageContent>();
+	private pastedImages = new Map<number, ImageContent | AudioContent | VideoContent>();
 	private nextImageMarkerId = 1;
 
 	private unsubscribe?: () => void;
@@ -4856,7 +4858,7 @@ export class InteractiveMode {
 			}
 			text = remapImageMarkers(text, literalRemaps);
 
-			const images: Array<readonly [number, ImageContent]> = [];
+			const images: Array<readonly [number, ImageContent | AudioContent | VideoContent]> = [];
 			for (const image of prompt.images ?? []) {
 				const markerId = allocateMarker();
 				images.push([markerId, image]);
@@ -4879,8 +4881,10 @@ export class InteractiveMode {
 		this.promptStashState.queuedStashes = ordered.length > 0 ? ordered : undefined;
 	}
 
-	private getPromptStashImages(text: string): readonly (readonly [number, ImageContent])[] {
-		const images: Array<readonly [number, ImageContent]> = [];
+	private getPromptStashImages(
+		text: string,
+	): readonly (readonly [number, ImageContent | AudioContent | VideoContent])[] {
+		const images: Array<readonly [number, ImageContent | AudioContent | VideoContent]> = [];
 		for (const markerId of imageMarkerIds(text)) {
 			const image = this.pastedImages.get(markerId);
 			if (image) {
@@ -4940,7 +4944,7 @@ export class InteractiveMode {
 	 * just-added image and any whose marker is still referenced (editor or queues)
 	 * are never evicted, so a live marker never loses its image.
 	 */
-	private rememberPastedImage(id: number, image: ImageContent): void {
+	private rememberPastedImage(id: number, image: ImageContent | AudioContent | VideoContent): void {
 		this.pastedImages.set(id, image);
 		const keep = this.liveImageMarkerIds();
 		keep.add(id);
@@ -4984,7 +4988,7 @@ export class InteractiveMode {
 	 * routed to settings.imageModel at dispatch or the turn fails there with an
 	 * actionable setup error, so nothing is silently downgraded downstream.
 	 */
-	private collectImagesFor(text: string): ImageContent[] | undefined {
+	private collectImagesFor(text: string): (ImageContent | AudioContent | VideoContent)[] | undefined {
 		const images = collectMarkedImages(this.pastedImages, text);
 		return images.length > 0 ? images : undefined;
 	}
@@ -7965,12 +7969,12 @@ export class InteractiveMode {
 	 * Images for a queue replace: undefined preserves the server's images (some
 	 * markers cannot be resolved by this client), [] clears, a list replaces.
 	 */
-	private collectQueueReplaceImages(text: string): ImageContent[] | undefined {
+	private collectQueueReplaceImages(text: string): (ImageContent | AudioContent | VideoContent)[] | undefined {
 		const markers = [...new Set(imageMarkerIds(text))];
 		if (markers.length === 0) return [];
 		const resolved = markers.map((markerId) => this.pastedImages.get(markerId));
 		return resolved.every((image) => image !== undefined)
-			? resolved.map((image) => ({ ...(image as ImageContent) }))
+			? resolved.map((image) => ({ ...(image as ImageContent | AudioContent | VideoContent) }))
 			: undefined;
 	}
 

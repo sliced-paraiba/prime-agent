@@ -1,5 +1,5 @@
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
-import type { ImageContent, UserMessage } from "@earendil-works/pi-ai";
+import type { AudioContent, ImageContent, UserMessage, VideoContent } from "@earendil-works/pi-ai";
 import type { InputSource } from "./extensions/index.js";
 import type { CustomMessage } from "./messages.js";
 import type { SessionSlashCommand } from "./slash-commands.js";
@@ -22,7 +22,12 @@ export function queuedMessageLaneDeliveryPolicy(lane: QueuedMessageLane): Delive
 export type QueuedMessageMutation =
 	| { type: "delete" }
 	| { type: "move"; direction: -1 | 1 }
-	| { type: "replace"; text: string; images?: ImageContent[]; lane: QueuedMessageLane };
+	| {
+			type: "replace";
+			text: string;
+			images?: (ImageContent | AudioContent | VideoContent)[];
+			lane: QueuedMessageLane;
+	  };
 export type QueuedMessageMutationStatus = "applied" | "rejected" | "invalid";
 
 export interface SessionActionSnapshot {

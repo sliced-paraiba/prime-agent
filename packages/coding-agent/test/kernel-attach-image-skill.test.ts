@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { getBundledSkillsDir } from "../src/config.js";
 import type { PythonSkillRuntimeInfo } from "../src/core/skills.js";
-import { IpythonKernelProvisioner, imageBlocksFromAttachments } from "../src/core/tools/ipython.js";
+import { IpythonKernelProvisioner, mediaBlocksFromAttachments } from "../src/core/tools/ipython.js";
 
 const PNG_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==";
 
@@ -53,7 +53,7 @@ describe("attach-image skill over the kernel host bridge", () => {
 		expect(result.attachments?.[0]?.mimeType).toBe("image/png");
 		expect(result.attachments?.[0]?.data).toBe(PNG_BASE64);
 
-		const blocks = imageBlocksFromAttachments(result.attachments);
+		const blocks = mediaBlocksFromAttachments(result.attachments);
 		expect(blocks).toEqual([{ type: "image", data: PNG_BASE64, mimeType: "image/png" }]);
 	});
 

@@ -19,12 +19,14 @@ import {
 import type {
 	Api,
 	AssistantMessage,
+	AudioContent,
 	ImageContent,
 	Model,
 	ServiceTier,
 	TextContent,
 	Usage,
 	UserMessage,
+	VideoContent,
 } from "@earendil-works/pi-ai";
 import {
 	clampServiceTier,
@@ -613,7 +615,7 @@ export type AutoRefineReviewer = (request: AutoRefineReviewRequest, signal?: Abo
 
 export interface PromptOptions {
 	expandPromptTemplates?: boolean;
-	images?: ImageContent[];
+	images?: (ImageContent | AudioContent | VideoContent)[];
 	streamingBehavior?: "steer" | "followUp";
 	followUpQueueKey?: string;
 	source?: InputSource;
@@ -626,7 +628,7 @@ export interface PromptOptions {
 	signal?: AbortSignal;
 	admissionCommitted?: () => void;
 	agentMessageId?: string;
-	content?: (TextContent | ImageContent)[];
+	content?: (TextContent | ImageContent | AudioContent | VideoContent)[];
 	customMessage?: CustomMessage;
 	/** Overrides the queue priority inferred from the source and message. */
 	priority?: SessionActionPriority;
@@ -649,11 +651,11 @@ interface SubmissionNormalizationPolicy {
 }
 
 type NormalizedSubmission =
-	| { kind: "prompt"; text: string; images?: ImageContent[] }
+	| { kind: "prompt"; text: string; images?: (ImageContent | AudioContent | VideoContent)[] }
 	| {
 			kind: "sessionCommand";
 			text: string;
-			images?: ImageContent[];
+			images?: (ImageContent | AudioContent | VideoContent)[];
 			command: SessionSlashCommand;
 	  }
 	| { kind: "extensionCommand"; completion: Promise<void> }
@@ -706,8 +708,8 @@ function turnExecutionPoliciesEqual(left: TurnExecutionPolicy, right: TurnExecut
 }
 
 interface PreparedTurnPayload extends SessionTurnPayload {
-	images?: ImageContent[];
-	content?: (TextContent | ImageContent)[];
+	images?: (ImageContent | AudioContent | VideoContent)[];
+	content?: (TextContent | ImageContent | AudioContent | VideoContent)[];
 	customMessage?: CustomMessage;
 	prepared?: PreparedPromptPreparation;
 	executionPolicy: TurnExecutionPolicy;
@@ -719,7 +721,7 @@ interface PreparedTurnPayload extends SessionTurnPayload {
 }
 
 interface PreparedCommandPayload extends SessionCommandPayload {
-	images?: ImageContent[];
+	images?: (ImageContent | AudioContent | VideoContent)[];
 }
 
 type QueuedSessionAction = SessionAction<PreparedTurnPayload | PreparedCommandPayload>;
@@ -747,8 +749,8 @@ function oncePreflight(
 
 interface RestoredPromptInput {
 	text: string;
-	content?: (TextContent | ImageContent)[];
-	images?: ImageContent[];
+	content?: (TextContent | ImageContent | AudioContent | VideoContent)[];
+	images?: (ImageContent | AudioContent | VideoContent)[];
 	queueKey?: string;
 	agentMessageId?: string;
 	customMessage?: CustomMessage;
@@ -770,8 +772,8 @@ export type SessionActionRecoveryPayload =
 			text: string;
 			preview?: string;
 			records: SessionActionRecoveryRecord[];
-			images?: ImageContent[];
-			content?: (TextContent | ImageContent)[];
+			images?: (ImageContent | AudioContent | VideoContent)[];
+			content?: (TextContent | ImageContent | AudioContent | VideoContent)[];
 			customMessage?: CustomMessage;
 			executionPolicy: TurnExecutionPolicy;
 			queueVisible: boolean;
@@ -782,7 +784,7 @@ export type SessionActionRecoveryPayload =
 			kind: "session_command";
 			text: string;
 			command: SessionSlashCommand;
-			images?: ImageContent[];
+			images?: (ImageContent | AudioContent | VideoContent)[];
 	  };
 
 export interface SessionActionRecoveryAction {
@@ -843,9 +845,9 @@ function primaryDeliveryRecord(action: QueuedSessionAction): DeliveryRecord {
 	return record;
 }
 
-function normalizeMessageContent(content: string | (TextContent | ImageContent)[]): {
+function normalizeMessageContent(content: string | (TextContent | ImageContent | AudioContent | VideoContent)[]): {
 	text: string;
-	images?: ImageContent[];
+	images?: (ImageContent | AudioContent | VideoContent)[];
 } {
 	if (typeof content === "string") return { text: content };
 	const text = content
@@ -3119,7 +3121,10 @@ export class AgentSession {
 		custom.timestamp = fresh.timestamp;
 	}
 
-	private _runOrQueueGoalContext(kind: "continuation" | "objective_updated", images?: ImageContent[]): void {
+	private _runOrQueueGoalContext(
+		kind: "continuation" | "objective_updated",
+		images?: (ImageContent | AudioContent | VideoContent)[],
+	): void {
 		if (!this._goalState.objective) return;
 		this._ensureGoalRuntimeActive();
 		const message = createGoalContextMessage(this._goalState, kind, images);
@@ -3133,7 +3138,10 @@ export class AgentSession {
 		this._admitSessionInput(action, { front: true, wake: false });
 	}
 
-	private async _handleGoalSlashCommand(text: string, images: ImageContent[] | undefined): Promise<boolean> {
+	private async _handleGoalSlashCommand(
+		text: string,
+		images: (ImageContent | AudioContent | VideoContent)[] | undefined,
+	): Promise<boolean> {
 		const command = this._parseGoalSlashCommand(text);
 		if (!command) {
 			return false;
@@ -5460,7 +5468,7 @@ export class AgentSession {
 
 	private _finishSubmissionNormalization(
 		text: string,
-		images: ImageContent[] | undefined,
+		images: (ImageContent | AudioContent | VideoContent)[] | undefined,
 		policy: SubmissionNormalizationPolicy,
 	): NormalizedSubmission {
 		if (policy.expandPromptTemplates) this._throwIfUnknownSlashCommand(text);
@@ -5508,7 +5516,7 @@ export class AgentSession {
 
 	private _normalizeSubmission(
 		text: string,
-		images: ImageContent[] | undefined,
+		images: (ImageContent | AudioContent | VideoContent)[] | undefined,
 		policy: SubmissionNormalizationPolicy,
 	): NormalizedSubmission | Promise<NormalizedSubmission> {
 		if (policy.parseSessionCommands) {
@@ -6243,7 +6251,7 @@ export class AgentSession {
 	 */
 	async steer(
 		text: string,
-		images?: ImageContent[],
+		images?: (ImageContent | AudioContent | VideoContent)[],
 		options: {
 			queueKey?: string;
 			agentMessageId?: string;
@@ -6278,7 +6286,7 @@ export class AgentSession {
 	 */
 	async followUp(
 		text: string,
-		images?: ImageContent[],
+		images?: (ImageContent | AudioContent | VideoContent)[],
 		options: {
 			queueKey?: string;
 			agentMessageId?: string;
@@ -6406,7 +6414,7 @@ export class AgentSession {
 	private _restoreSessionCommand(
 		text: string,
 		customMessage: CustomMessage | undefined,
-		images: ImageContent[] | undefined,
+		images: (ImageContent | AudioContent | VideoContent)[] | undefined,
 		schedule: SessionInputSchedule,
 		agentMessageId: string | undefined,
 	): boolean | undefined {
@@ -6439,11 +6447,11 @@ export class AgentSession {
 
 	async restoreSteeringMessage(
 		text: string,
-		images?: ImageContent[],
+		images?: (ImageContent | AudioContent | VideoContent)[],
 		options: {
 			queueKey?: string;
 			agentMessageId?: string;
-			content?: (TextContent | ImageContent)[];
+			content?: (TextContent | ImageContent | AudioContent | VideoContent)[];
 			customMessage?: CustomMessage;
 			prefixMessages?: CustomMessage[];
 		} = {},
@@ -6466,11 +6474,11 @@ export class AgentSession {
 
 	async restoreFollowUpMessage(
 		text: string,
-		images?: ImageContent[],
+		images?: (ImageContent | AudioContent | VideoContent)[],
 		options: {
 			queueKey?: string;
 			agentMessageId?: string;
-			content?: (TextContent | ImageContent)[];
+			content?: (TextContent | ImageContent | AudioContent | VideoContent)[];
 			customMessage?: CustomMessage;
 			prefixMessages?: CustomMessage[];
 		} = {},
@@ -6495,8 +6503,11 @@ export class AgentSession {
 		});
 	}
 
-	private _buildPromptContent(text: string, images?: ImageContent[]): (TextContent | ImageContent)[] {
-		const content: (TextContent | ImageContent)[] = [];
+	private _buildPromptContent(
+		text: string,
+		images?: (ImageContent | AudioContent | VideoContent)[],
+	): (TextContent | ImageContent | AudioContent | VideoContent)[] {
+		const content: (TextContent | ImageContent | AudioContent | VideoContent)[] = [];
 		content.push({ type: "text", text });
 		if (images) content.push(...images);
 		return content;
@@ -6601,11 +6612,11 @@ export class AgentSession {
 	private _createPreparedTurnAction(
 		schedule: SessionInputSchedule,
 		text: string,
-		images: ImageContent[] | undefined,
+		images: (ImageContent | AudioContent | VideoContent)[] | undefined,
 		options: {
 			agentMessageId?: string;
 			queueKey?: string;
-			content?: (TextContent | ImageContent)[];
+			content?: (TextContent | ImageContent | AudioContent | VideoContent)[];
 			message?: QueuedAgentMessage;
 			prefixMessages?: CustomMessage[];
 			previewLabel?: string;
@@ -6670,7 +6681,7 @@ export class AgentSession {
 	private _createSessionCommandAction(
 		text: string,
 		command: SessionSlashCommand,
-		images: ImageContent[] | undefined,
+		images: (ImageContent | AudioContent | VideoContent)[] | undefined,
 		schedule: SessionInputSchedule,
 		options: {
 			agentMessageId?: string;
@@ -6799,11 +6810,11 @@ export class AgentSession {
 	private async _queuePreparedPrompt(
 		schedule: SessionInputSchedule,
 		text: string,
-		images?: ImageContent[],
+		images?: (ImageContent | AudioContent | VideoContent)[],
 		options: {
 			agentMessageId?: string;
 			queueKey?: string;
-			content?: (TextContent | ImageContent)[];
+			content?: (TextContent | ImageContent | AudioContent | VideoContent)[];
 			message?: QueuedAgentMessage;
 			prefixMessages?: CustomMessage[];
 			previewLabel?: string;
@@ -7498,11 +7509,11 @@ export class AgentSession {
 	 * @param options.deliverAs Delivery mode when streaming: "steer" or "followUp"
 	 */
 	async sendUserMessage(
-		content: string | (TextContent | ImageContent)[],
+		content: string | (TextContent | ImageContent | AudioContent | VideoContent)[],
 		options?: { deliverAs?: "steer" | "followUp" },
 	): Promise<void> {
 		let text: string;
-		let images: ImageContent[] | undefined;
+		let images: (ImageContent | AudioContent | VideoContent)[] | undefined;
 
 		if (typeof content === "string") {
 			text = content;

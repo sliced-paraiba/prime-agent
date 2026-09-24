@@ -1,4 +1,4 @@
-import type { ImageContent, TextContent, UserMessage } from "@earendil-works/pi-ai";
+import type { AudioContent, ImageContent, TextContent, UserMessage, VideoContent } from "@earendil-works/pi-ai";
 import chalk from "chalk";
 import { spawn } from "child_process";
 import { readFileSync, rmSync, statSync } from "fs";
@@ -669,11 +669,13 @@ function readOptionalStringRecord(value: unknown, fieldName: string): Record<str
 	return value as Record<string, string>;
 }
 
-function isMessageContentBlock(value: unknown): value is TextContent | ImageContent {
+function isMessageContentBlock(value: unknown): value is TextContent | ImageContent | AudioContent | VideoContent {
 	return (
 		isRecord(value) &&
 		((value.type === "text" && typeof value.text === "string") ||
-			(value.type === "image" && typeof value.data === "string" && typeof value.mimeType === "string"))
+			((value.type === "image" || value.type === "audio" || value.type === "video") &&
+				typeof value.data === "string" &&
+				typeof value.mimeType === "string"))
 	);
 }
 

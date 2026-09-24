@@ -1,5 +1,14 @@
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
-import type { AssistantMessage, ImageContent, Message, ServiceTier, TextContent, Usage } from "@earendil-works/pi-ai";
+import type {
+	AssistantMessage,
+	AudioContent,
+	ImageContent,
+	Message,
+	ServiceTier,
+	TextContent,
+	Usage,
+	VideoContent,
+} from "@earendil-works/pi-ai";
 import { randomUUID } from "crypto";
 import {
 	appendFileSync,
@@ -207,7 +216,7 @@ export interface GitStateEntry extends SessionEntryBase {
 export interface CustomMessageEntry<T = unknown> extends SessionEntryBase {
 	type: "custom_message";
 	customType: string;
-	content: string | (TextContent | ImageContent)[];
+	content: string | (TextContent | ImageContent | AudioContent | VideoContent)[];
 	details?: T;
 	display: boolean;
 }
@@ -839,7 +848,7 @@ function buildSessionStateEntry(state: SessionState, seed: AppendEntrySeed): Ses
 
 function buildCustomMessageEntry<T>(
 	customType: string,
-	content: string | (TextContent | ImageContent)[],
+	content: string | (TextContent | ImageContent | AudioContent | VideoContent)[],
 	display: boolean,
 	details: T | undefined,
 	seed: AppendEntrySeed,
@@ -993,7 +1002,7 @@ export function appendSessionStateToExistingFile(sessionFile: string, state: Ses
 export function appendCustomMessageToExistingFile<T = unknown>(
 	sessionFile: string,
 	customType: string,
-	content: string | (TextContent | ImageContent)[],
+	content: string | (TextContent | ImageContent | AudioContent | VideoContent)[],
 	display: boolean,
 	details?: T,
 ): string {
@@ -2331,7 +2340,7 @@ export class SessionManager {
 
 	appendCustomMessageEntry<T = unknown>(
 		customType: string,
-		content: string | (TextContent | ImageContent)[],
+		content: string | (TextContent | ImageContent | AudioContent | VideoContent)[],
 		display: boolean,
 		details?: T,
 	): string {
@@ -2352,7 +2361,7 @@ export class SessionManager {
 	 */
 	appendCustomMessageEntryWithRollback<T = unknown>(
 		customType: string,
-		content: string | (TextContent | ImageContent)[],
+		content: string | (TextContent | ImageContent | AudioContent | VideoContent)[],
 		display: boolean,
 		details?: T,
 	): string {

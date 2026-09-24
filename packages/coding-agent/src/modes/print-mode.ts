@@ -6,7 +6,7 @@
  * - `pi --mode json "prompt"` - JSON event stream
  */
 
-import type { ImageContent } from "@earendil-works/pi-ai";
+import type { AudioContent, ImageContent, VideoContent } from "@earendil-works/pi-ai";
 import type { AgentSessionRuntime } from "../core/agent-session-runtime.js";
 import { type AgentAutonomousStatus, type AutonomousLimitReason, autonomousLimitReason } from "../core/autonomous.js";
 import { flushRawStdout, writeRawStdout } from "../core/output-guard.js";
@@ -26,7 +26,7 @@ export interface PrintModeOptions {
 	/** First message to send (may contain @file content) */
 	initialMessage?: string;
 	/** Images to attach to the initial message */
-	initialImages?: ImageContent[];
+	initialImages?: (ImageContent | AudioContent | VideoContent)[];
 }
 
 function describeAutonomousLimit(status: AgentAutonomousStatus, reason: AutonomousLimitReason): string {

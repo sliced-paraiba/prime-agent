@@ -6,7 +6,7 @@
  */
 
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
-import type { ImageContent, Message, TextContent } from "@earendil-works/pi-ai";
+import type { AudioContent, ImageContent, Message, TextContent, VideoContent } from "@earendil-works/pi-ai";
 import type { AgentCronJob } from "./cron-jobs.js";
 import {
 	type AppliedRefinementEdit,
@@ -325,7 +325,7 @@ export interface BashExecutionMessage {
 export interface CustomMessage<T = unknown> {
 	role: "custom";
 	customType: string;
-	content: string | (TextContent | ImageContent)[];
+	content: string | (TextContent | ImageContent | AudioContent | VideoContent)[];
 	display: boolean;
 	details?: T;
 	timestamp: number;
@@ -451,7 +451,7 @@ export function createCompactionSummaryMessage(
 /** Convert CustomMessageEntry to AgentMessage format */
 export function createCustomMessage(
 	customType: string,
-	content: string | (TextContent | ImageContent)[],
+	content: string | (TextContent | ImageContent | AudioContent | VideoContent)[],
 	display: boolean,
 	details: unknown | undefined,
 	timestamp: string,

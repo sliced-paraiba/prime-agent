@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { Readable } from "node:stream";
 import * as acp from "@agentclientprotocol/sdk";
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
-import type { ImageContent } from "@earendil-works/pi-ai";
+import type { AudioContent, ImageContent, VideoContent } from "@earendil-works/pi-ai";
 import { VERSION } from "../../config.js";
 import type { AgentSessionRuntime } from "../../core/agent-session-runtime.js";
 import type { AgentAutonomousStatus } from "../../core/autonomous.js";
@@ -363,9 +363,12 @@ class AcpUpdateProducer {
  * actually reach the model: dropping them silently would let a client believe a
  * pasted screenshot was accepted.
  */
-function promptContent(blocks: readonly unknown[]): { text: string; images: ImageContent[] } {
+function promptContent(blocks: readonly unknown[]): {
+	text: string;
+	images: (ImageContent | AudioContent | VideoContent)[];
+} {
 	const texts: string[] = [];
-	const images: ImageContent[] = [];
+	const images: (ImageContent | AudioContent | VideoContent)[] = [];
 	for (const block of blocks) {
 		if (!block || typeof block !== "object") continue;
 		const typed = block as {

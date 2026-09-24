@@ -1,6 +1,7 @@
 import type {
 	AssistantMessage,
 	AssistantMessageEvent,
+	AudioContent,
 	ImageContent,
 	Message,
 	Model,
@@ -10,6 +11,7 @@ import type {
 	TextContent,
 	Tool,
 	ToolResultMessage,
+	VideoContent,
 } from "@earendil-works/pi-ai";
 import type { Static, TSchema } from "typebox";
 
@@ -63,7 +65,7 @@ export interface BeforeToolCallResult {
  * There is no deep merge for `content` or `details`.
  */
 export interface AfterToolCallResult {
-	content?: (TextContent | ImageContent)[];
+	content?: (TextContent | ImageContent | AudioContent | VideoContent)[];
 	details?: unknown;
 	isError?: boolean;
 	/**
@@ -331,7 +333,7 @@ export interface AgentState {
 /** Final or partial result produced by a tool. */
 export interface AgentToolResult<T> {
 	/** Text or image content returned to the model. */
-	content: (TextContent | ImageContent)[];
+	content: (TextContent | ImageContent | AudioContent | VideoContent)[];
 	/** Structured details for logs or UI rendering. */
 	details: T;
 	/**
