@@ -48,8 +48,8 @@ jobs:
           else
             git rebase --abort || true
             echo "::error::Rebase onto upstream/main conflicted; manual resolution needed."
-            if ! gh issue list --state open --limit 50 --json title --jq '.[].title' | grep -qx "Upstream sync conflict"; then
-              gh issue create                 --title "Upstream sync conflict"                 --body "The scheduled rebase of \`main\` onto \`upstream/main\` conflicted. Resolve manually: \`git fetch upstream main && git rebase upstream/main\`, then \`git push --force-with-lease origin main\`. This issue auto-stops reappearing once the rebase succeeds; close it after resolving."
+            if ! gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 50 --json title --jq '.[].title' | grep -qx "Upstream sync conflict"; then
+              gh issue create --repo "$GITHUB_REPOSITORY"                 --title "Upstream sync conflict"                 --body "The scheduled rebase of \`main\` onto \`upstream/main\` conflicted. Resolve manually: \`git fetch upstream main && git rebase upstream/main\`, then \`git push --force-with-lease origin main\`. This issue auto-stops reappearing once the rebase succeeds; close it after resolving."
             fi
             exit 1
           fi
