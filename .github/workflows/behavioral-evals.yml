@@ -188,7 +188,7 @@ jobs:
         run: echo "BEHAVIORAL_JOB_DEADLINE_EPOCH=$(( $(date +%s) + 360 * 60 ))" >> "$GITHUB_ENV"
 
       - name: Check out trusted evaluator
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
@@ -209,7 +209,7 @@ jobs:
         run: uv sync --locked --project scripts/benchmarks
 
       - name: Check out pinned Verifiers
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: PrimeIntellect-ai/verifiers
           ref: 9df6a3c01bb640c34380f4f6dff63a1b168dee22
@@ -217,7 +217,7 @@ jobs:
           persist-credentials: false
 
       - name: Check out pinned environments
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: PrimeIntellect-ai/prime-envs
           ref: a41660014674ba43d56ed054199dde25ddf69946
